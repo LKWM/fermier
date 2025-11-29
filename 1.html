@@ -1,0 +1,615 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronRight, ChevronLeft, RotateCcw, Volume2, Pause } from 'lucide-react';
+
+// --- Configuration: Audio Files ---
+// [오디오 파일 경로 설정]
+const AUDIO_PATHS = {
+  // Effects
+  page_turn: 'https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3', 
+  
+  // Chapter 1 Audio
+  chapter_1: 'https://res.cloudinary.com/de76i94ia/video/upload/v1764399257/Chapter_1_nwd97b.mp3',
+  
+  // Sentences
+  sentence_1: 'https://res.cloudinary.com/de76i94ia/video/upload/v1764399222/Sentence_1_qximxb.mp3',
+  sentence_2: 'https://res.cloudinary.com/de76i94ia/video/upload/v1764399221/Sentence_2_ucpe5k.mp3',
+  sentence_3: 'https://res.cloudinary.com/de76i94ia/video/upload/v1764399221/Sentence_3_dexmsr.mp3',
+  sentence_4: 'https://res.cloudinary.com/de76i94ia/video/upload/v1764399222/Sentence_4_iqhwzv.mp3',
+  sentence_5: 'https://res.cloudinary.com/de76i94ia/video/upload/v1764399222/Sentence_5_ycjtty.mp3',
+  
+  // Narration
+  narration_1: '', 
+};
+
+// --- Data & Content ---
+
+const BOOK_TITLE = "초보 농부 진수 (Jinsu, le fermier débutant)";
+const CHAPTER_TITLE = "1 장: 결심 (La résolution)";
+
+// Color palette for bracketed words
+const WORD_COLORS = [
+  "text-blue-600",
+  "text-red-600",
+  "text-purple-600",
+  "text-orange-600",
+  "text-teal-600"
+];
+
+// Content Data Structure
+const pages = [
+  {
+    type: "cover",
+    title: BOOK_TITLE,
+    subTitle: CHAPTER_TITLE,
+  },
+  {
+    type: "full_text",
+    content: "진수는 매일 컴퓨터 앞에 앉아서 일해요. 눈도 아프고 어깨도 무거워요. 도시 생활이 조금 지루해요. 진수는 주말농장을 시작하기로 결심해요. 흙을 만지고 땀을 흘리고 싶어요.",
+    audio: "chapter_1"
+  },
+  {
+    type: "section_title",
+    title: "한 문장씩 읽어 볼까요?"
+  },
+  // Sentence 1 (Listen page removed)
+  {
+    type: "translate",
+    text: "진수는 매일 컴퓨터 앞에 앉아서 일해요.",
+    audio: "sentence_1",
+    transNat: "Jinsu travaille assis devant son ordinateur tous les jours.",
+    transLit: "Jinsu travaille en s'asseyant devant l'ordinateur chaque jour."
+  },
+  {
+    type: "analysis",
+    text: "진수는 [매일] 컴퓨터 [앞]에 <bd>[앉]아서</bd> [일해요].",
+    transLit: "Jinsu travaille en s'asseyant devant l'ordinateur chaque jour.", // Added Literal Translation
+    audio: "sentence_1",
+    showButton: true, 
+    vocab: [
+      { word: "매일", meaning: "tous les jours" },
+      { word: "앞", meaning: "devant" },
+      { word: "앉다", meaning: "s’assoeir" },
+      { word: "일하다", meaning: "travailler" }
+    ],
+    explanation: {
+      kr: "“앉아서” 는 동사 “앉다” 와 어미 “-아/어서”가 결합된 형태예요. “-아/어서”는 durant, en même temps, en faisant 과 같은 의미로 “이러한 상태에서” 라는 뜻이에요.",
+      fr: "“앉아서” est une combinaison du verbe “앉다” et de la terminaison “-아/어서”. “-아/어서” signifie “pendant”, “en même temps” ou “en faisant”, indiquant “dans cet état”."
+    }
+  },
+  // Sentence 2 (Listen page removed)
+  {
+    type: "translate",
+    text: "눈도 아프고 어깨도 무거워요.",
+    audio: "sentence_2",
+    transNat: "Il a mal aux yeux et ses épaules sont lourdes.",
+    transLit: "Les yeux aussi font mal et les épaules aussi sont lourdes."
+  },
+  {
+    type: "analysis",
+    text: "[눈][도] [아프]고 [어깨]도 [무거워요].",
+    transLit: "Les yeux aussi font mal et les épaules aussi sont lourdes.",
+    audio: "sentence_2",
+    showButton: true,
+    vocab: [
+      { word: "눈", meaning: "oeil" },
+      { word: "도", meaning: "aussi" },
+      { word: "아프다", meaning: "être malade" },
+      { word: "어깨", meaning: "épaule" },
+      { word: "무겁다", meaning: "être lourd" }
+    ],
+    explanation: {
+      kr: "몸의 감각을 표현할 때, 한국어에서는 사람이 아닌 신체 부위를 주어로 문장을 구성해요.",
+      fr: "En coréen, pour exprimer des sensations physiques, on utilise souvent la partie du corps comme sujet de la phrase plutôt que la personne elle-même."
+    }
+  },
+  // Sentence 3 (Listen page removed)
+  {
+    type: "translate",
+    text: "도시 생활이 조금 지루해요.",
+    audio: "sentence_3",
+    transNat: "La vie citadine est un peu ennuyeuse.",
+    transLit: "La vie de ville est un peu ennuyeuse."
+  },
+  {
+    type: "analysis",
+    text: "[도시] [생활]이 [조금] [지루해요].",
+    transLit: "La vie de ville est un peu ennuyeuse.",
+    audio: "sentence_3",
+    showButton: true,
+    vocab: [
+      { word: "도시", meaning: "ville" },
+      { word: "생활", meaning: "vie" },
+      { word: "조금", meaning: "un peu" },
+      { word: "지루하다", meaning: "être ennuyeux" }
+    ],
+    explanation: {
+      kr: "La vie de ville 은 “도시의 생활” 이지만 두 명사 사이에서 소유격조사 “의”는 생략되는 경우가 많아요.",
+      fr: "“La vie de ville” se dit “도시의 생활”, mais la particule possessive “의” entre deux noms est souvent omise."
+    }
+  },
+  // Sentence 4 (Listen page removed)
+  {
+    type: "translate",
+    text: "진수는 주말농장을 시작하기로 결심해요.",
+    audio: "sentence_4",
+    transNat: "Jinsu décide de s’occuper d'un potager le week-end.",
+    transLit: "Jinsu décide de commencer une « ferme de week-end »"
+  },
+  {
+    type: "analysis",
+    text: "진수는 [주말][농장]을 시작하기로 결심해요.",
+    transLit: "Jinsu décide de commencer une « ferme de week-end »",
+    audio: "sentence_4",
+    showButton: true,
+    vocab: [
+      { word: "주말", meaning: "week-end" },
+      { word: "농장", meaning: "ferme" },
+      { word: "시작하다", meaning: "commencer" },
+      { word: "결심하다", meaning: "décider" }
+    ],
+    explanation: {
+      kr: "한국에서는 도시에 사는 사람들이 작물을 가꿀 목적으로 근교의 땅을 빌릴 수 있어요. 이것을 <주말농장>이라고 불러요. 일주일에 1-2번만 방문해 잠깐 일하기 때문에 규모가 작답니다.",
+      fr: "En Corée, les citadins peuvent louer un petit terrain en banlieue pour cultiver des plantes. On appelle cela une “Ferme de week-end”. Comme on n'y va qu'une ou deux fois par semaine, c'est généralement petit."
+    }
+  },
+  // Sentence 5 (Listen page removed)
+  {
+    type: "translate",
+    text: "흙을 만지고 땀을 흘리고 싶어요.",
+    audio: "sentence_5",
+    transNat: "Il veut toucher la terre et transpirer un peu.",
+    transLit: "Il veut toucher la terre et verser de la sueur."
+  },
+  {
+    type: "analysis",
+    text: "흙을 만지고 땀을 흘리고 싶어요.", 
+    overrideText: "[흙]을 [만지]고 [땀]을 [흘리]고 싶어요.",
+    transLit: "Il veut toucher la terre et verser de la sueur.",
+    audio: "sentence_5",
+    showButton: true,
+    vocab: [
+      { word: "흙", meaning: "terre" },
+      { word: "만지다", meaning: "toucher" },
+      { word: "땀", meaning: "sueur" },
+      { word: "흘리다", meaning: "verser, couler" }
+    ],
+    explanation: {
+      kr: "‘흘리다’는 “액체를 떨어트리다, 쏟다”라는 뜻이에요. “땀을 흘리다”라고 말하면 transpirer 라는 뜻이 된답니다.",
+      fr: "“흘리다” signifie “faire tomber” ou “verser un liquide”. Dire “땀을 흘리다” (verser de la sueur) est l'expression pour “transpirer”."
+    }
+  },
+  {
+    type: "section_title",
+    title: "이제 이야기를 다시 한 번 들어 보세요."
+  },
+  {
+    type: "review",
+    audio: "chapter_1",
+    sentences: [
+      { text: "진수는 매일 컴퓨터 앞에 앉아서 일해요.", targetIndex: 4 }, // Re-indexed to Analysis 1
+      { text: "눈도 아프고 어깨도 무거워요.", targetIndex: 6 }, // Re-indexed to Analysis 2
+      { text: "도시 생활이 조금 지루해요.", targetIndex: 8 }, // Re-indexed to Analysis 3
+      { text: "진수는 주말농장을 시작하기로 결심해요.", targetIndex: 10 }, // Re-indexed to Analysis 4
+      { text: "흙을 만지고 땀을 흘리고 싶어요.", targetIndex: 12 }  // Re-indexed to Analysis 5
+    ]
+  },
+  {
+    type: "outro",
+    text: "오늘 이야기는 여기까지예요. 내일은 무슨 이야기가 이어질까요? 2장에서 다음 이야기를 확인해 보세요!",
+    audio: "narration_1"
+  }
+];
+
+// --- Helper Components ---
+
+const StyledText = ({ text }) => {
+  const regex = /(<bd>.*?<\/bd>|\[.*?\])/g;
+  const parts = text.split(regex);
+  let bracketCounter = 0;
+
+  return (
+    <span className="break-keep inline-block">
+      {parts.map((part, i) => {
+        if (part.startsWith("<bd>")) {
+          const content = part.replace(/<\/?bd>/g, "");
+          if (content.includes("[")) {
+             const subParts = content.split(/(\[.*?\])/g);
+             return (
+               <span key={i} className="font-bold">
+                 {subParts.map((sub, j) => {
+                   if(sub.startsWith("[")) {
+                     const word = sub.replace(/[\[\]]/g, "");
+                     const colorClass = WORD_COLORS[bracketCounter % WORD_COLORS.length];
+                     bracketCounter++;
+                     return <span key={j} className={colorClass}>{word}</span>
+                   }
+                   return sub;
+                 })}
+               </span>
+             )
+          }
+          return <b key={i} className="font-bold">{content}</b>;
+        } else if (part.startsWith("[")) {
+          const content = part.replace(/[\[\]]/g, "");
+          const colorClass = WORD_COLORS[bracketCounter % WORD_COLORS.length];
+          bracketCounter++;
+          return <span key={i} className={`font-medium ${colorClass}`}>{content}</span>;
+        } else {
+          return part;
+        }
+      })}
+    </span>
+  );
+};
+
+// Updated Audio Button to use real audio
+const AudioButton = ({ id }) => {
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef(null);
+
+  const toggle = () => {
+    // If no path is set, just log
+    if (!AUDIO_PATHS[id]) {
+      console.log(`Audio placeholder for: ${id} (No file path set)`);
+      return;
+    }
+
+    if (playing) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      setPlaying(false);
+    } else {
+      setPlaying(true);
+      // Create new audio instance
+      if (!audioRef.current) {
+        audioRef.current = new Audio(AUDIO_PATHS[id]);
+        audioRef.current.onended = () => setPlaying(false);
+        audioRef.current.onerror = () => {
+           console.error("Audio Load Error"); 
+           setPlaying(false);
+        };
+      }
+      audioRef.current.play().catch(e => {
+        console.log("Play failed (interact first?):", e);
+        setPlaying(false);
+      });
+    }
+  };
+
+  return (
+    <button 
+      onClick={toggle}
+      className={`flex items-center justify-center w-12 h-12 rounded-full transition-all shadow-md mx-auto
+        ${playing ? 'bg-green-600 text-white scale-110' : 'bg-white text-green-700 border border-green-200 hover:bg-green-50'}
+      `}
+      aria-label="Play Audio"
+    >
+      {playing ? <Pause size={24} /> : <Volume2 size={24} />}
+    </button>
+  );
+};
+
+// --- Main App Component ---
+
+const App = () => {
+  const [pageIndex, setPageIndex] = useState(0);
+  const [returnIndex, setReturnIndex] = useState(null);
+  
+  // Ref to hold the auto-play audio instance
+  const autoPlayRef = useRef(null);
+
+  const currentPage = pages[pageIndex];
+
+  // Sound Effect Helper
+  const playPageTurnSound = () => {
+    if (AUDIO_PATHS.page_turn) {
+      const audio = new Audio(AUDIO_PATHS.page_turn);
+      audio.volume = 0.3;
+      audio.play().catch(() => {});
+    }
+  };
+
+  // Auto-play logic with real audio support
+  useEffect(() => {
+    // Stop previous audio if running
+    if (autoPlayRef.current) {
+      autoPlayRef.current.pause();
+      autoPlayRef.current = null;
+    }
+
+    // [MODIFIED] Auto-play is now skipped if page type is 'analysis'
+    if (currentPage.audio && AUDIO_PATHS[currentPage.audio] && currentPage.type !== 'analysis') {
+      const timer = setTimeout(() => {
+        const audio = new Audio(AUDIO_PATHS[currentPage.audio]);
+        autoPlayRef.current = audio;
+        audio.play().catch(e => console.log("Auto-play blocked:", e));
+      }, 1000); // 1 second delay
+      return () => {
+        clearTimeout(timer);
+        if (autoPlayRef.current) {
+          autoPlayRef.current.pause();
+        }
+      };
+    }
+  }, [pageIndex, currentPage]);
+
+  const goNext = () => {
+    if (pageIndex < pages.length - 1) {
+      playPageTurnSound();
+      setPageIndex(prev => prev + 1);
+    }
+  };
+
+  const goPrev = () => {
+    if (pageIndex > 0) {
+      playPageTurnSound();
+      setPageIndex(prev => prev - 1);
+    }
+  };
+
+  const goReturn = () => {
+    if (returnIndex !== null) {
+      playPageTurnSound();
+      setPageIndex(returnIndex);
+      setReturnIndex(null);
+    }
+  };
+
+  const jumpToPage = (targetIdx) => {
+    playPageTurnSound();
+    setReturnIndex(pageIndex);
+    setPageIndex(targetIdx);
+  };
+
+  // Render content based on page type
+  // KEY CHANGE: All wrappers now have "flex-col justify-center items-center h-full"
+  const renderContent = () => {
+    switch (currentPage.type) {
+      case "cover":
+        return (
+          <div className="flex flex-col items-center justify-center h-full text-center space-y-10 animate-fadeIn p-4 w-full">
+            <div className="w-28 h-28 bg-green-100 rounded-full flex items-center justify-center text-5xl shadow-inner mb-4">
+              🌱
+            </div>
+            <div className="space-y-6">
+              <h1 className="text-3xl md:text-5xl font-extrabold text-green-900 leading-tight">
+                {currentPage.title}
+              </h1>
+              <h2 className="text-xl md:text-3xl font-light text-green-800">
+                {currentPage.subTitle}
+              </h2>
+            </div>
+          </div>
+        );
+
+      case "full_text":
+        return (
+          <div className="flex flex-col justify-center items-center h-full animate-fadeIn w-full">
+             <div className="bg-white/60 p-8 md:p-12 rounded-3xl shadow-sm border border-green-50 w-full max-w-4xl">
+                <p className="text-xl md:text-4xl text-slate-800 font-medium break-keep text-center leading-[2.2] md:leading-[2.5]">
+                  {currentPage.content}
+                </p>
+             </div>
+          </div>
+        );
+
+      case "section_title":
+        return (
+          <div className="flex flex-col items-center justify-center h-full text-center animate-fadeIn px-4 w-full">
+             <h2 className="text-3xl md:text-5xl font-bold text-green-800 break-keep leading-snug">
+               {currentPage.title}
+             </h2>
+          </div>
+        );
+
+      // 'listen' case removed
+
+      case "translate":
+        return (
+          <div className="flex flex-col justify-center items-center h-full animate-fadeIn w-full max-w-4xl mx-auto space-y-12">
+            <div className="text-center w-full pb-8 border-b border-green-200">
+               <p className="text-2xl md:text-4xl font-bold text-slate-800 break-keep leading-relaxed">{currentPage.text}</p>
+            </div>
+            
+            <div className="w-full flex flex-col gap-10 items-center">
+               <div className="flex flex-col items-center gap-4">
+                 <span className="text-sm font-bold text-green-600 uppercase tracking-wider bg-green-50 px-3 py-1 rounded-full">Traduction Naturelle</span>
+                 <p className="text-xl md:text-3xl text-slate-700 italic text-center font-light">
+                   {currentPage.transNat}
+                 </p>
+               </div>
+               
+               <div className="flex flex-col items-center gap-4">
+                 <span className="text-sm font-bold text-green-600 uppercase tracking-wider bg-green-50 px-3 py-1 rounded-full">Traduction Littérale</span>
+                 <p className="text-lg md:text-2xl text-slate-500 text-center">
+                   {currentPage.transLit}
+                 </p>
+               </div>
+            </div>
+          </div>
+        );
+
+      case "analysis":
+        return (
+          // Used h-full + justify-center to force vertical centering even with scrolling content
+          <div className="flex flex-col justify-center items-center h-full animate-fadeIn w-full max-w-3xl mx-auto overflow-hidden">
+             <div className="w-full flex flex-col max-h-full">
+               
+               {/* Text Area */}
+               <div className="flex-none py-6 text-center w-full border-b border-green-200 shrink-0">
+                  {/* [MODIFIED] Added Literal Translation above main text */}
+                  <div className="mb-6">
+                    <p className="text-base md:text-xl text-slate-500 text-center italic">
+                       {currentPage.transLit}
+                    </p>
+                  </div>
+
+                  <div className="text-2xl md:text-4xl mb-6 leading-relaxed">
+                     <StyledText text={currentPage.overrideText || currentPage.text} />
+                  </div>
+                  
+                  {currentPage.showButton && (
+                    <div className="mt-4">
+                      <AudioButton id={currentPage.audio} />
+                    </div>
+                  )}
+               </div>
+
+               {/* Scrollable Area - Centered content inside */}
+               <div className="flex-1 overflow-y-auto min-h-0 pt-6 px-2 w-full flex flex-col items-center justify-center">
+                  <div className="space-y-8 w-full">
+                    {/* Vocab List */}
+                    <div className="flex flex-wrap gap-3 justify-center">
+                       {currentPage.vocab.map((v, i) => (
+                         <div key={i} className="bg-white border border-green-100 px-4 py-2 rounded-xl text-base md:text-lg shadow-sm flex items-center gap-2">
+                           <span className={`font-bold ${WORD_COLORS[i % WORD_COLORS.length]}`}>{v.word}</span>
+                           <span className="text-slate-300">|</span>
+                           <span className="text-slate-600">{v.meaning}</span>
+                         </div>
+                       ))}
+                    </div>
+
+                    {/* Explanation Box */}
+                    <div className="bg-green-100/40 p-8 rounded-3xl border border-green-200 mx-auto w-full">
+                       <p className="text-slate-800 text-lg md:text-xl leading-relaxed mb-6 font-medium break-keep text-center">
+                         {currentPage.explanation.kr}
+                       </p>
+                       <div className="border-t border-green-200/60 pt-6">
+                         <p className="text-slate-600 text-base md:text-lg leading-relaxed italic break-keep text-center">
+                            {currentPage.explanation.fr}
+                         </p>
+                       </div>
+                    </div>
+                  </div>
+               </div>
+             </div>
+          </div>
+        );
+        
+      case "review":
+        return (
+          <div className="flex flex-col justify-center items-center h-full animate-fadeIn w-full max-w-3xl mx-auto overflow-hidden">
+             <div className="w-full flex flex-col max-h-full justify-center">
+               <div className="flex-none pb-8 text-center shrink-0">
+                  <p className="text-xl md:text-2xl text-green-800 font-bold mb-3 break-keep">
+                    어려운 문장을 클릭하면 설명을 다시 볼 수 있어요!
+                  </p>
+                  <p className="text-slate-500 text-sm md:text-base">
+                    Cliquez sur une phrase difficile pour revoir l'explication.
+                  </p>
+               </div>
+
+               <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar w-full flex flex-col items-center justify-center">
+                  <div className="space-y-4 w-full">
+                    {currentPage.sentences.map((item, i) => (
+                      <button 
+                        key={i}
+                        onClick={() => jumpToPage(item.targetIndex)}
+                        className="w-full text-center bg-white hover:bg-green-50 p-5 md:p-6 rounded-2xl border border-slate-100 hover:border-green-300 transition-all group shadow-sm"
+                      >
+                        <p className="text-slate-700 group-hover:text-green-800 text-lg md:text-2xl leading-relaxed break-keep">
+                          {item.text}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+               </div>
+             </div>
+          </div>
+        );
+
+      case "outro":
+         return (
+          <div className="flex flex-col items-center justify-center h-full text-center space-y-10 animate-fadeIn p-4 w-full">
+            <div className="w-24 h-24 bg-green-600 rounded-full flex items-center justify-center text-white mb-6 shadow-xl">
+               <span className="text-4xl">🌿</span>
+            </div>
+            <p className="text-2xl md:text-4xl text-slate-800 leading-[2.5] font-medium max-w-3xl break-keep">
+               {currentPage.text}
+            </p>
+          </div>
+         );
+
+      default:
+        return <div>Error</div>;
+    }
+  };
+
+  return (
+    <div className="min-h-screen w-full bg-neutral-50 flex flex-col font-sans text-slate-800 app-container">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@300;400;500;700&family=Nunito:wght@400;600;700&display=swap');
+        
+        .app-container {
+          font-family: 'Gowun Dodum', 'Noto Sans KR', sans-serif;
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #cbd5e1;
+          border-radius: 20px;
+        }
+      `}</style>
+
+      {/* Main Content Area - Center Aligned */}
+      <main className="flex-1 w-full max-w-6xl mx-auto p-4 md:p-8 flex flex-col justify-center items-center relative overflow-hidden h-[calc(100vh-80px)]">
+         {renderContent()}
+      </main>
+
+      {/* Footer Navigation */}
+      <footer className="h-20 bg-white border-t border-green-100 flex items-center justify-between px-6 md:px-12 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
+        
+        <div className="w-20 flex justify-start">
+          {returnIndex === null && (
+             <button 
+               onClick={goPrev} 
+               disabled={pageIndex === 0}
+               className={`p-3 rounded-full transition-colors ${pageIndex === 0 ? 'opacity-0 cursor-default' : 'text-slate-500 hover:bg-slate-100 hover:text-green-600'}`}
+             >
+               <ChevronLeft size={32} />
+             </button>
+          )}
+        </div>
+
+        <div className="font-mono text-green-600 font-bold text-lg">
+           {pageIndex > 0 ? `${pageIndex} / ${pages.length - 1}` : ""}
+        </div>
+
+        <div className="w-20 flex justify-end">
+          {returnIndex !== null ? (
+            <button 
+              onClick={goReturn}
+              className="p-3 bg-green-600 text-white rounded-full shadow-lg hover:bg-green-700 transition-all hover:scale-105"
+            >
+              <RotateCcw size={24} />
+            </button>
+          ) : (
+            <button 
+              onClick={goNext}
+              disabled={pageIndex === pages.length - 1}
+              className={`p-3 rounded-full transition-colors ${pageIndex === pages.length - 1 ? 'opacity-0 cursor-default' : 'text-slate-500 hover:bg-slate-100 hover:text-green-600'}`}
+            >
+              <ChevronRight size={32} />
+            </button>
+          )}
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default App;
