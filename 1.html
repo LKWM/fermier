@@ -39,11 +39,10 @@
 
         // --- Configuration ---
         const AUDIO_PATHS = {
-            // Specified Sound Effects
             page_turn: 'https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3',
             lesson_finish: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3',
             
-            // Content Audio (Original Links)
+            // Content Audio (Original)
             chapter_1: 'https://res.cloudinary.com/de76i94ia/video/upload/v1764399257/Chapter_1_nwd97b.mp3',
             sentence_1: 'https://res.cloudinary.com/de76i94ia/video/upload/v1764399222/Sentence_1_qximxb.mp3',
             sentence_2: 'https://res.cloudinary.com/de76i94ia/video/upload/v1764399221/Sentence_2_ucpe5k.mp3',
@@ -51,7 +50,7 @@
             sentence_4: 'https://res.cloudinary.com/de76i94ia/video/upload/v1764399222/Sentence_4_iqhwzv.mp3',
             sentence_5: 'https://res.cloudinary.com/de76i94ia/video/upload/v1764399222/Sentence_5_ycjtty.mp3',
             
-            // Missing Audio (Placeholder)
+            // Narration (Placeholder)
             narration_1: '', 
         };
 
@@ -71,7 +70,7 @@
             { type: "translate", text: "도시 생활이 조금 지루해요.", audio: "sentence_3", transNat: "La vie citadine est un peu ennuyeuse.", transLit: "La vie de ville est un peu ennuyeuse." },
             { type: "analysis", text: "[도시] [생활]이 [조금] [지루해요].", transLit: "La vie de ville est un peu ennuyeuse.", audio: "sentence_3", showButton: true, vocab: [{ word: "도시", meaning: "ville" }, { word: "생활", meaning: "vie" }, { word: "조금", meaning: "un peu" }, { word: "지루하다", meaning: "être ennuyeux" }], explanation: { kr: "La vie de ville 은 “도시의 생활” 이지만 두 명사 사이에서 소유격조사 “의”는 생략되는 경우가 많아요.", fr: "“La vie de ville” se dit “도시의 생활”, mais la particule possessive “의” entre deux noms est souvent omise." } },
             { type: "translate", text: "진수는 주말농장을 시작하기로 결심해요.", audio: "sentence_4", transNat: "Jinsu décide de s’occuper d'un potager le week-end.", transLit: "Jinsu décide de commencer une « ferme de week-end »" },
-            { type: "analysis", text: "진수는 [주말][농장]을 시작하기로 결심해요.", transLit: "Jinsu décide de commencer une « ferme de week-end »", audio: "sentence_4", showButton: true, vocab: [{ word: "주말", meaning: "week-end" }, { word: "농장", meaning: "ferme" }, { word: "시작하다", meaning: "commencer" }, { word: "결심하다", meaning: "décider" }], explanation: { kr: "한국에서는 도시에 사는 사람들이 작물을 가꿀 목적으로 근교의 땅을 빌릴 수 있어요. 이것을 <주말농장>이라고 불러요. 일주일에 1-2번만 방문해 잠깐 일하기 때문에 규모가 작답니다.", fr: "En Corée, les citadins peuvent louer un petit terrain en banlieue pour cultiver des plantes. On appelle cela une “Ferme de week-end”. Comme on n'y va qu'une ou deux fois par semaine, c'est généralement petit." } },
+            { type: "analysis", text: "진수는 [주말][농장]을 [시작하기로] [결심해요].", transLit: "Jinsu décide de commencer une « ferme de week-end »", audio: "sentence_4", showButton: true, vocab: [{ word: "주말", meaning: "week-end" }, { word: "농장", meaning: "ferme" }, { word: "시작하다", meaning: "commencer" }, { word: "결심하다", meaning: "décider" }], explanation: { kr: "한국에서는 도시에 사는 사람들이 작물을 가꿀 목적으로 근교의 땅을 빌릴 수 있어요. 이것을 <주말농장>이라고 불러요. 일주일에 1-2번만 방문해 잠깐 일하기 때문에 규모가 작답니다.", fr: "En Corée, les citadins peuvent louer un petit terrain en banlieue pour cultiver des plantes. On appelle cela une “Ferme de week-end”. Comme on n'y va qu'une ou deux fois par semaine, c'est généralement petit." } },
             { type: "translate", text: "흙을 만지고 땀을 흘리고 싶어요.", audio: "sentence_5", transNat: "Il veut toucher la terre et transpirer un peu.", transLit: "Il veut toucher la terre et verser de la sueur." },
             { type: "analysis", text: "흙을 만지고 땀을 흘리고 싶어요.", overrideText: "[흙]을 [만지]고 [땀]을 [흘리]고 싶어요.", transLit: "Il veut toucher la terre et verser de la sueur.", audio: "sentence_5", showButton: true, vocab: [{ word: "흙", meaning: "terre" }, { word: "만지다", meaning: "toucher" }, { word: "땀", meaning: "sueur" }, { word: "흘리다", meaning: "verser, couler" }], explanation: { kr: "‘흘리다’는 “액체를 떨어트리다, 쏟다”라는 뜻이에요. “땀을 흘리다”라고 말하면 transpirer 라는 뜻이 된답니다.", fr: "“흘리다” signifie “faire tomber” ou “verser un liquide”. Dire “땀을 흘리다” (verser de la sueur) est l'expression pour “transpirer”." } },
             { type: "section_title", title: "이제 이야기를 다시 한 번 들어 보세요." },
@@ -121,7 +120,7 @@
 
             const goNext = () => {
                 if (pageIndex < pages.length - 1) {
-                    if (pageIndex === 14) { // Before entering Outro (15)
+                    if (pageIndex === 14) { 
                         if (AUDIO_PATHS.lesson_finish) { const audio = new Audio(AUDIO_PATHS.lesson_finish); audio.volume = 0.5; audio.play().catch(() => {}); }
                         if (window.parent) { window.parent.postMessage({ type: 'lesson_complete' }, '*'); }
                     } else { playPageTurnSound(); }
