@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>초보 농부 진수 - Introduction</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@300;400;500;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* 기본 폰트 설정: 고운 돋움으로 통일 */
+        body {
+            font-family: 'Gowun Dodum', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .app-container {
+            font-family: 'Gowun Dodum', sans-serif;
+        }
+        /* Boldface: 폰트 변경 없이 굵기만 적용 */
+        .font-bold {
+            font-weight: 700;
+        }
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+    </style>
+</head>
+<body class="bg-neutral-50 text-slate-800">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- Icons ---
+        const ChevronLeft = ({ size = 24, className }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m15 18-6-6 6-6"/></svg>);
+        const ChevronRight = ({ size = 24, className }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6"/></svg>);
+        const Volume2 = ({ size = 24, className }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>);
+        const Pause = ({ size = 24, className }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>);
+
+        // --- Configuration ---
+        const AUDIO_PATHS = {
+            page_turn: 'https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3',
+            lesson_finish: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3',
+            title_audio: 'https://res.cloudinary.com/de76i94ia/video/upload/v1765385450/title_euoxpz.mp3'
+        };
+
+        const WORD_COLORS = ["text-blue-600","text-red-600","text-purple-600","text-orange-600","text-teal-600"];
+
+        // --- Helper for Styled Text ---
+        const StyledText = ({ text }) => {
+            const regex = /(<bd>.*?<\/bd>|\[.*?\])/g;
+            const parts = text.split(regex);
+            let bracketCounter = 0;
+            return (
+                <span className="break-keep inline-block">
+                {parts.map((part, i) => {
+                    if (part.startsWith("<bd>")) {
+                        const content = part.replace(/<\/?bd>/g, "");
+                        return <b key={i} className="font-bold">{content}</b>;
+                    } else if (part.startsWith("[")) {
+                        const content = part.replace(/[\[\]]/g, "");
+                        const colorClass = WORD_COLORS[bracketCounter % WORD_COLORS.length];
+                        bracketCounter++;
+                        return <span key={i} className={`font-medium ${colorClass}`}>{content}</span>;
+                    } else {
+                        return part;
+                    }
+                })}
+                </span>
+            );
+        };
+
+        // --- Data ---
+        const pages = [
+            // Page 1: Cover
+            {
+                type: "cover",
+                title: "Introduction",
+                subTitle: "한국어 소설 읽기 (Lire un roman coréen)",
+                introTextKR: "안녕하세요! “한국어 소설 읽기” 에 오신 것을 환영합니다! 이 프로그램에서 우리는 “초보 농부 진수” 라는 소설을 함께 읽으며 배운 문법을 복습하고, 새로운 단어를 배워볼 거예요.",
+                introTextFR: "Bonjour ! Bienvenue dans « Lire un roman coréen » ! Dans ce programme, nous allons lire ensemble le roman « Jinsu, le fermier débutant », réviser la grammaire apprise et apprendre de nouveaux mots."
+            },
+            // Page 2: Text only
+            {
+                type: "text",
+                contentKR: "한국어로 소설을 읽기가 어려울 것 같다고요? 걱정마세요! 저 진수가 소설을 프랑스어로 번역하고 설명도 해 드릴 거거든요! 저는 프랑스어도 할 수 있답니다!",
+                contentFR: "Vous pensez que lire un roman en coréen sera difficile ? Ne vous inquiétez pas ! Moi, Jinsu, je traduirai le roman en français et je vous l'expliquerai ! Je sais aussi parler français !"
+            },
+            // Page 3: Text only
+            {
+                type: "text",
+                contentKR: "이 이야기는 총 10 장으로 구성되어 있어요. 매일 조금씩 제 이야기를 들으시면 10일 후에는 자연스럽게 제 이야기를 이해할 수 있게 되실 거예요.",
+                contentFR: "Cette histoire se compose de 10 chapitres au total. Si vous écoutez mon histoire petit à petit chaque jour, vous pourrez naturellement la comprendre au bout de 10 jours."
+            },
+            // Page 4: Text only
+            {
+                type: "text",
+                contentKR: "그럼, 이야기를 들으면서 한국어도 열심히 공부하고 싶으신 분들을 위해 강의 구성을 간단히 설명해 드릴게요.",
+                contentFR: "Alors, pour ceux qui souhaitent étudier sérieusement le coréen tout en écoutant l'histoire, je vais vous expliquer brièvement la structure de la leçon."
+            },
+            // Page 5: Tutorial - Full Text
+            {
+                type: "tutorial",
+                mockType: "full",
+                mockContent: {
+                    text: "초보 농부 진수",
+                    audio: "title_audio"
+                },
+                explanationKR: "우선 처음에는 이야기를 눈으로 읽고 귀로 들으며 무슨 이야기인지 추측해 보세요. 이미 이해할 수 있는 단어들도 있을 거예요.",
+                explanationFR: "Tout d'abord, lisez et écoutez l'histoire pour deviner de quoi il s'agit. Il y a peut-être déjà des mots que vous comprenez."
+            },
+            // Page 6: Tutorial - Translation
+            {
+                type: "tutorial",
+                mockType: "translate",
+                mockContent: {
+                    text: "초보 농부 진수",
+                    transNat: "Jinsu, le fermier débutant",
+                    transLit: "Débutant fermier Jinsu",
+                    audio: "title_audio"
+                },
+                explanationKR: "그 다음엔 한 문장씩 다시 들어보며 내용을 이해해 보세요. 여기에서는 자연스러운 프랑스어 해석과 직접적인 해석, 총 두 가지를 제공해요. “traduction littérale” 에서는 실제 한국 사람들은 어떻게 표현하는지 이해하는데 집중해 보세요.",
+                explanationFR: "Ensuite, réécoutez phrase par phrase pour bien comprendre. Nous fournissons deux types de traductions : naturelle et littérale. Avec la « traduction littérale », concentrez-vous sur la manière dont les Coréens s'expriment réellement."
+            },
+            // Page 7: Tutorial - Analysis
+            {
+                type: "tutorial",
+                mockType: "analysis",
+                mockContent: {
+                    text: "[초보] [농부], 진수",
+                    vocab: [
+                        {word: "초보", mean: "débutant"},
+                        {word: "농부", mean: "fermier"}
+                    ],
+                    explanation: {
+                        kr: "한국어에서는 수식을 받는 단어가 뒤에 오기 때문에 어순이 프랑스어와 반대예요.",
+                        fr: "En coréen, le mot modifié vient après, donc l'ordre des mots est inverse du français."
+                    },
+                    audio: "title_audio"
+                },
+                explanationKR: "해석을 봐도 이해되지 않는 부분이 있을 수 있어요. 하지만 걱정 마세요, 다음 장에서 문법과 단어를 한국어와 프랑스어로 각각 설명해 드린답니다.",
+                explanationFR: "Même avec la traduction, il peut y avoir des parties incompréhensibles. Mais ne vous inquiétez pas, dans la section suivante, nous expliquerons la grammaire et le vocabulaire en coréen et en français."
+            },
+            // Page 8: Tutorial - Review
+            {
+                type: "tutorial",
+                mockType: "review",
+                mockContent: {
+                    text: "초보 농부 진수",
+                    audio: "title_audio"
+                },
+                explanationKR: "모든 문장을 다 배우고 나면 마지막으로 오늘 공부한 내용을 다시 한 번 읽어보며 배운 내용을 확인해요. 이 때 어려운 부분이 있다면 원하는 문장으로 돌아가서 다시 공부할 수 있어요. (위 박스의 문장을 클릭해 보세요!)",
+                explanationFR: "Une fois que vous avez appris toutes les phrases, relisez ce que vous avez étudié aujourd'hui pour vérifier. Si une partie est difficile, vous pouvez cliquer sur la phrase pour retourner à l'explication. (Cliquez sur la phrase dans l'encadré ci-dessus !)"
+            },
+            // Page 9: Outro
+            {
+                type: "text",
+                contentKR: "어때요? 이렇게 한다면 여러분도 쉽게 한국어 이야기를 읽을 수 있겠죠? 그럼 1장에서 진짜 제 이야기를 시작할게요. 1장에서 만나요!",
+                contentFR: "Qu'en pensez-vous ? Ainsi, vous pourrez lire facilement des histoires en coréen, n'est-ce pas ? Alors, je vais commencer ma vraie histoire au chapitre 1. À bientôt au chapitre 1 !"
+            }
+        ];
+
+        // --- Helper Components ---
+
+        const AudioButton = ({ id }) => {
+            const [playing, setPlaying] = useState(false);
+            const audioRef = useRef(null);
+            const toggle = () => {
+                if (!AUDIO_PATHS[id]) return;
+                if (playing) { if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; } setPlaying(false); } 
+                else { setPlaying(true); if (!audioRef.current) { audioRef.current = new Audio(AUDIO_PATHS[id]); audioRef.current.onended = () => setPlaying(false); audioRef.current.onerror = () => setPlaying(false); } audioRef.current.play().catch(e => setPlaying(false)); }
+            };
+            return (<button onClick={toggle} className={`flex items-center justify-center w-10 h-10 rounded-full transition-all shadow-md mx-auto ${playing ? 'bg-green-600 text-white scale-110' : 'bg-white text-green-700 border border-green-200 hover:bg-green-50'}`}>{playing ? <Pause size={18} /> : <Volume2 size={18} />}</button>);
+        };
+
+        const MockFrame = ({ content, type, onReviewClick }) => {
+            return (
+                <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl border-4 border-slate-200 shadow-xl overflow-hidden aspect-[16/9] flex flex-col relative transform transition-all hover:scale-[1.01]">
+                    {/* Mock Status Bar */}
+                    <div className="bg-slate-100 h-6 flex items-center justify-between px-3 text-[10px] text-slate-400 shrink-0">
+                        <span>9:41</span>
+                        <div className="flex gap-1"><span>📶</span><span>🔋</span></div>
+                    </div>
+                    
+                    {/* Mock Content Wrapper */}
+                    <div className="flex-1 w-full overflow-y-auto custom-scrollbar bg-green-50/30 relative">
+                        {/* Inner Content - min-h-full allows scrolling without clipping top */}
+                        <div className="min-h-full flex flex-col justify-center items-center p-4 md:p-8 text-center">
+                            
+                            {type === 'full' && (
+                                <div className="space-y-4">
+                                    <p className="text-xl md:text-3xl font-bold text-slate-800 break-keep leading-relaxed">{content.text}</p>
+                                    <AudioButton id={content.audio} />
+                                </div>
+                            )}
+
+                            {type === 'translate' && (
+                                <div className="space-y-6 w-full flex flex-col items-center">
+                                    <p className="text-xl md:text-3xl font-bold text-slate-800 border-b border-green-100 pb-4">{content.text}</p>
+                                    <div className="text-left space-y-2 w-full max-w-lg bg-white/60 p-4 rounded-xl">
+                                        <div className="flex flex-col gap-1">
+                                            <p className="text-xs font-bold text-green-600 uppercase">Naturelle</p>
+                                            <p className="text-sm md:text-lg text-slate-700 italic">{content.transNat}</p>
+                                        </div>
+                                        <div className="flex flex-col gap-1 mt-2">
+                                            <p className="text-xs font-bold text-green-600 uppercase">Littérale</p>
+                                            <p className="text-sm md:text-lg text-slate-500">{content.transLit}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {type === 'analysis' && (
+                                <div className="space-y-6 w-full flex flex-col items-center">
+                                    <div className="text-2xl md:text-4xl mb-2 leading-relaxed">
+                                        <StyledText text={content.text} />
+                                    </div>
+                                    <AudioButton id={content.audio} />
+                                    
+                                    <div className="flex justify-center gap-3 flex-wrap">
+                                        {content.vocab.map((v, i) => (
+                                            <div key={i} className="bg-white border border-green-100 px-3 py-1.5 rounded-lg text-sm md:text-base shadow-sm flex items-center gap-2">
+                                                <span className={`font-bold ${WORD_COLORS[i % WORD_COLORS.length]}`}>{v.word}</span>
+                                                <span className="text-slate-300 mx-2">|</span>
+                                                <span className="text-slate-600">{v.mean}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Explanation Box inside Frame */}
+                                    {content.explanation && (
+                                        <div className="bg-green-100/40 p-6 rounded-2xl border border-green-200 mx-auto w-full max-w-lg text-left shadow-sm">
+                                           <p className="text-slate-800 text-sm md:text-base leading-relaxed mb-4 font-medium break-keep text-center">
+                                             {content.explanation.kr}
+                                           </p>
+                                           <div className="border-t border-green-200/60 pt-4">
+                                             <p className="text-slate-600 text-xs md:text-sm leading-relaxed italic break-keep text-center">
+                                                {content.explanation.fr}
+                                             </p>
+                                           </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {type === 'review' && (
+                                <div className="space-y-4 w-full max-w-lg">
+                                    <p className="text-sm text-slate-500 mb-2">클릭하여 복습하기</p>
+                                    <button 
+                                        onClick={onReviewClick}
+                                        className="w-full bg-white hover:bg-green-100 p-4 rounded-xl border border-slate-200 transition-all shadow-sm text-slate-700 font-bold text-lg md:text-xl cursor-pointer ring-2 ring-transparent hover:ring-green-400 group"
+                                    >
+                                        <span className="group-hover:text-green-800">{content.text}</span> 👈
+                                    </button>
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [pageIndex, setPageIndex] = useState(0);
+            const currentPage = pages[pageIndex];
+
+            const playPageTurnSound = () => { 
+                if (AUDIO_PATHS.page_turn) { 
+                    const audio = new Audio(AUDIO_PATHS.page_turn); 
+                    audio.volume = 0.3; 
+                    audio.play().catch(() => {}); 
+                } 
+            };
+
+            const goNext = () => {
+                if (pageIndex < pages.length - 1) {
+                    // Moving from the second to last page (Index 7) to the last page (Index 8)
+                    if (pageIndex === pages.length - 2) {
+                        if (AUDIO_PATHS.lesson_finish) {
+                            const audio = new Audio(AUDIO_PATHS.lesson_finish); 
+                            audio.volume = 0.5; 
+                            audio.play().catch(() => {});
+                        }
+                        if (window.parent) { 
+                            window.parent.postMessage({ type: 'lesson_complete' }, '*'); 
+                        }
+                    } else {
+                        playPageTurnSound();
+                    }
+                    setPageIndex(prev => prev + 1);
+                }
+            };
+
+            const goPrev = () => {
+                if (pageIndex > 0) {
+                    playPageTurnSound();
+                    setPageIndex(prev => prev - 1);
+                }
+            };
+
+            const handleReviewClick = () => {
+                playPageTurnSound();
+                setPageIndex(6); // Jump to Index 6 (Page 7)
+            };
+
+            return (
+                <div className="min-h-screen w-full flex flex-col app-container">
+                    <main className="flex-1 w-full max-w-6xl mx-auto p-4 md:p-8 flex flex-col justify-center items-center relative overflow-hidden h-[calc(100vh-80px)]">
+                        <div className="w-full animate-fadeIn flex flex-col items-center">
+                            
+                            {/* Page Content */}
+                            {currentPage.type === 'cover' ? (
+                                <div className="flex flex-col items-center justify-center h-full text-center space-y-10 p-4 w-full max-w-3xl">
+                                    <div className="w-28 h-28 bg-green-100 rounded-full flex items-center justify-center text-5xl shadow-inner mb-4">
+                                        👋
+                                    </div>
+                                    <div className="space-y-6">
+                                        <h1 className="text-3xl md:text-5xl font-extrabold text-green-900 leading-tight">
+                                            {currentPage.title}
+                                        </h1>
+                                        <h2 className="text-xl md:text-3xl font-light text-green-800">
+                                            {currentPage.subTitle}
+                                        </h2>
+                                    </div>
+                                    <div className="space-y-4 pt-8 border-t border-green-100 w-full">
+                                        <p className="text-lg md:text-xl text-slate-800 leading-relaxed font-medium break-keep">
+                                            {currentPage.introTextKR}
+                                        </p>
+                                        <p className="text-base md:text-lg text-slate-500 leading-relaxed italic break-keep">
+                                            {currentPage.introTextFR}
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : currentPage.type === 'text' ? (
+                                <div className="text-center space-y-8 p-4 w-full max-w-3xl">
+                                    <div className="space-y-6">
+                                        <p className="text-xl md:text-3xl text-slate-800 leading-[2] font-medium break-keep">
+                                            {currentPage.contentKR}
+                                        </p>
+                                        <p className="text-lg md:text-xl text-slate-500 leading-relaxed italic break-keep bg-white/60 p-6 rounded-2xl border border-slate-100 shadow-sm">
+                                            {currentPage.contentFR}
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="w-full flex flex-col gap-8 max-w-4xl">
+                                    {/* Mock Frame - Responsive Width */}
+                                    <div className="w-full">
+                                        <MockFrame 
+                                            type={currentPage.mockType} 
+                                            content={currentPage.mockContent} 
+                                            onReviewClick={handleReviewClick}
+                                        />
+                                    </div>
+                                    
+                                    {/* Explanation Text (Outside Frame) */}
+                                    <div className="bg-green-600/5 border border-green-600/20 p-6 rounded-2xl text-center space-y-4 shadow-sm w-full">
+                                        <p className="text-lg md:text-xl text-slate-800 font-medium break-keep leading-relaxed">
+                                            {currentPage.explanationKR}
+                                        </p>
+                                        <p className="text-base md:text-lg text-slate-500 italic break-keep border-t border-green-200 pt-4 leading-relaxed">
+                                            {currentPage.explanationFR}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+                    </main>
+
+                    {/* Navigation */}
+                    <footer className="h-20 bg-white border-t border-green-100 flex items-center justify-between px-6 md:px-12 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
+                        <div className="w-20 flex justify-start">
+                            <button 
+                                onClick={goPrev} 
+                                disabled={pageIndex === 0}
+                                className={`p-3 rounded-full transition-colors ${pageIndex === 0 ? 'opacity-0 cursor-default' : 'text-slate-500 hover:bg-slate-100 hover:text-green-600'}`}
+                            >
+                                <ChevronLeft size={32} />
+                            </button>
+                        </div>
+                        <div className="font-mono text-green-600 font-bold text-lg">
+                            {pageIndex + 1} / {pages.length}
+                        </div>
+                        <div className="w-20 flex justify-end">
+                            {/* Hide Next Button on the last page (Index 8) */}
+                            {pageIndex < pages.length - 1 && (
+                                <button 
+                                    onClick={goNext}
+                                    className="p-3 rounded-full transition-colors text-slate-500 hover:bg-slate-100 hover:text-green-600"
+                                >
+                                    <ChevronRight size={32} />
+                                </button>
+                            )}
+                        </div>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
