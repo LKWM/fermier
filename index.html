@@ -11,23 +11,32 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Fonts: Noto Sans removed to ensure consistency -->
-    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@300;400;500;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* 기본 폰트 설정: 고운 돋움으로 통일 */
-        body {
+        /* 화면 고정 및 스크롤 방지 */
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
             font-family: 'Gowun Dodum', sans-serif;
             -webkit-font-smoothing: antialiased;
         }
+        #root {
+            height: 100%;
+        }
         .app-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
             font-family: 'Gowun Dodum', sans-serif;
         }
-        /* Boldface: 폰트 변경 없이 굵기만 적용 */
         .font-bold {
             font-weight: 700;
         }
-        /* Custom Scrollbar */
+        /* Custom Scrollbar (Inside Frames Only) */
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
         }
@@ -197,7 +206,8 @@
 
         const MockFrame = ({ content, type, onReviewClick }) => {
             return (
-                <div className="w-full max-w-3xl mx-auto bg-white rounded-2xl border-4 border-slate-200 shadow-xl overflow-hidden flex flex-col relative h-full min-h-0">
+                // Frame container: flex-1 to take available height, min-h-0 to allow shrinking
+                <div className="w-full max-w-4xl mx-auto bg-white rounded-2xl border-4 border-slate-200 shadow-xl overflow-hidden flex flex-col relative h-full min-h-0">
                     {/* Mock Status Bar */}
                     <div className="bg-slate-100 h-6 flex items-center justify-between px-3 text-[10px] text-slate-400 shrink-0">
                         <span>9:41</span>
@@ -206,7 +216,8 @@
                     
                     {/* Mock Content Wrapper */}
                     <div className="flex-1 w-full overflow-y-auto custom-scrollbar bg-green-50/30 relative">
-                        <div className="min-h-full flex flex-col justify-center items-center p-4 md:p-8 text-center">
+                        {/* Center content vertically if possible, or scroll if tall */}
+                        <div className="min-h-full flex flex-col justify-center items-center p-4 text-center">
                             
                             {type === 'full' && (
                                 <div className="space-y-4">
@@ -325,8 +336,8 @@
             };
 
             return (
-                <div className="min-h-screen w-full flex flex-col app-container">
-                    <main className="flex-1 w-full max-w-6xl mx-auto p-4 md:p-8 flex flex-col justify-center items-center relative overflow-hidden h-[calc(100vh-80px)]">
+                <div className="app-container">
+                    <main className="flex-1 w-full max-w-6xl mx-auto p-4 md:p-6 flex flex-col justify-center items-center overflow-hidden relative">
                         <div className="w-full h-full animate-fadeIn flex flex-col items-center justify-center">
                             
                             {/* Page Content */}
@@ -364,8 +375,9 @@
                                     </div>
                                 </div>
                             ) : (
+                                // Tutorial Layout: Fixed Height
                                 <div className="w-full h-full flex flex-col gap-4 md:gap-6 max-w-4xl justify-center">
-                                    {/* Mock Frame - Responsive Height (flex-1) */}
+                                    {/* Mock Frame - Grows to fill space */}
                                     <div className="flex-1 min-h-0 w-full">
                                         <MockFrame 
                                             type={currentPage.mockType} 
@@ -374,7 +386,7 @@
                                         />
                                     </div>
                                     
-                                    {/* Explanation Text (Fixed Height area) */}
+                                    {/* Explanation Text - Fixed size, never scrolls parent */}
                                     <div className="flex-none bg-green-600/5 border border-green-600/20 p-4 md:p-6 rounded-2xl text-center space-y-2 shadow-sm w-full">
                                         <p className="text-base md:text-lg text-slate-800 font-medium break-keep leading-relaxed">
                                             {currentPage.explanationKR}
